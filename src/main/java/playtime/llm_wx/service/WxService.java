@@ -1,10 +1,17 @@
 package playtime.llm_wx.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import playtime.llm_wx.dto.TextMessage;
+import playtime.llm_wx.dto.response.YiResponse;
+import playtime.llm_wx.util.RestUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,10 +21,17 @@ import java.util.Map;
 @Service
 public class WxService {
 
+    @Autowired
+    RedisService redisService;
+
+    @Autowired
+    YiService yiService;
+
     public static Map<String, Object> xmlToMap(String xml) throws IOException {
         XmlMapper xmlMapper = new XmlMapper();
         return xmlMapper.readValue(xml, Map.class);
     }
+
     public void handleEvent(HttpServletRequest request, HttpServletResponse response) {
         InputStream inputStream = null;
         XmlMapper xmlMapper = new XmlMapper();
@@ -95,10 +109,6 @@ public class WxService {
 
     public String getReturnMsgSubscribe(Map<String, Object> decryptMap) {
 
-        // TODO delete
-        return "";
-
-        /*
         log.info("---开始封装xml---decryptMap:" + decryptMap.toString());
         TextMessage textMessage = new TextMessage();
         textMessage.setToUserName(decryptMap.get("FromUserName").toString());
@@ -107,17 +117,24 @@ public class WxService {
         textMessage.setMsgType("text");
         textMessage.setContent("你好，欢迎关注XXX！\n" +
                 "\n" +
-                "关注XXX。立即登录PC端网址 \n" + domainname +
+                "关注XXX。立即登录PC端网址 \n" + //domainname +
                 " 即可完成注册！\n" +
                 "\n" +
                 "或，" +
-                "<a href='" + domainname + "'>点击这里立即完成注册</a>");
+                "<a href='" + "'>点击这里立即完成注册</a>");
         return getXmlString(textMessage);
-        */
 
     }
 
-/*
+    public String getReturnQueryAns(Map<String, Object> decryptMap) {
+        log.info("Start query from Yi");
+        YiResponse response = yiService.query("Hi");
+        TextMessage textMessage = new TextMessage( decryptMap, response.getMessages().get(0));
+
+        return getXmlString(textMessage);
+    }
+
+
     public String getXmlString(TextMessage textMessage) {
         String xml = "";
         if (textMessage != null) {
@@ -141,7 +158,31 @@ public class WxService {
         }
         return xml;
     }
-    */
 
 
+
+    @Value("${wx.official.appid}")
+    private String appid;
+
+    @Value("${wx.official.secret}")
+    private String secret;
+
+    public String getAccessToken() {
+        String url = String.format("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%s&secret=%s", appid, secret);
+
+        RestUtil restUtil = new RestUtil();
+        ResponseEntity<String> responseEntity = restUtil.get(url, String.class);
+
+        ObjectMapper mapper = new ObjectMapper();
+        String accessToken = "";
+        try {
+            Map res = mapper.readValue(responseEntity.getBody(), Map.class);
+            accessToken = (String) res.get("access_token");
+            redisService.setValue("access_token", accessToken, (Integer) res.get("expires_in"));
+        } catch (Exception e) {
+            log.error("failed to read value for access token", e);
+
+        }
+        return accessToken;
+    }
 }
