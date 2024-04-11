@@ -28,4 +28,12 @@ public class TextMessage {
         }
         this.content = content;
     }
+
+    public TextMessage(WxRequest request, String content) {
+        this.toUserName = request.getToUserName();
+        this.fromUserName = request.getFromUserName();
+        this.createTime = System.currentTimeMillis();
+        this.msgType = request.getMsgType();
+        this.content = content;
+    }
 }

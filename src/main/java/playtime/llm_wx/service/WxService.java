@@ -10,8 +10,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import playtime.llm_wx.dto.TextMessage;
+import playtime.llm_wx.dto.WxRequest;
 import playtime.llm_wx.dto.response.YiResponse;
+import playtime.llm_wx.util.Constant;
 import playtime.llm_wx.util.RestUtil;
+import playtime.llm_wx.util.XmlUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,17 +30,25 @@ public class WxService {
     @Autowired
     YiService yiService;
 
-    public static Map<String, Object> xmlToMap(String xml) throws IOException {
-        XmlMapper xmlMapper = new XmlMapper();
-        return xmlMapper.readValue(xml, Map.class);
+
+    public String handleMessage(HttpServletRequest request, HttpServletResponse response) {
+
+        WxRequest wxRequest = XmlUtil.parseXml(RestUtil.getBody(request), WxRequest.class);
+
+        if (wxRequest.getMsgType().equals("text")) {
+            return getReturnQueryAns(wxRequest);
+        }
+        return "";
+
     }
 
     public void handleEvent(HttpServletRequest request, HttpServletResponse response) {
         InputStream inputStream = null;
-        XmlMapper xmlMapper = new XmlMapper();
+        XmlMapper mapper = new XmlMapper();
+//        ObjectMapper mapper = new ObjectMapper();
         try {
             inputStream = request.getInputStream();
-            Map<String, Object> map = xmlMapper.readValue(request.getInputStream(), Map.class);
+            Map<String, Object> map = mapper.readValue(request.getInputStream(), Map.class);
 
             // openId
             String userOpenId = (String) map.get("FromUserName");
@@ -126,10 +137,10 @@ public class WxService {
 
     }
 
-    public String getReturnQueryAns(Map<String, Object> decryptMap) {
+    public String getReturnQueryAns(WxRequest request) {
         log.info("Start query from Yi");
-        YiResponse response = yiService.query("Hi");
-        TextMessage textMessage = new TextMessage( decryptMap, response.getMessages().get(0));
+        YiResponse response = yiService.query(request.getContent());
+        TextMessage textMessage = new TextMessage(request, response.getMessages().get(0));
 
         return getXmlString(textMessage);
     }
@@ -160,7 +171,6 @@ public class WxService {
     }
 
 
-
     @Value("${wx.official.appid}")
     private String appid;
 
@@ -168,17 +178,20 @@ public class WxService {
     private String secret;
 
     public String getAccessToken() {
+        String accessToken = redisService.getValue(Constant.RDS_WX_OFFICIAL_TOKEN);
+        if (accessToken != null) {
+            return accessToken;
+        }
         String url = String.format("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%s&secret=%s", appid, secret);
 
         RestUtil restUtil = new RestUtil();
         ResponseEntity<String> responseEntity = restUtil.get(url, String.class);
 
         ObjectMapper mapper = new ObjectMapper();
-        String accessToken = "";
         try {
             Map res = mapper.readValue(responseEntity.getBody(), Map.class);
             accessToken = (String) res.get("access_token");
-            redisService.setValue("access_token", accessToken, (Integer) res.get("expires_in"));
+            redisService.setValue(Constant.RDS_WX_OFFICIAL_TOKEN, accessToken, (Integer) res.get("expires_in"));
         } catch (Exception e) {
             log.error("failed to read value for access token", e);
 
