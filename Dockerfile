@@ -1,8 +1,9 @@
-FROM maven:3.8.4-amazoncorretto-17 AS build
+FROM maven:3.9.2-amazoncorretto-17 AS build
 
 WORKDIR /app
 
-COPY pom.xml .
+# COPY pom.xml .
+COPY . .
 
 RUN mvn clean install
 
@@ -12,6 +13,6 @@ WORKDIR /app
 
 COPY --from=build /app/target .
 
-RUN java -jar llm_wx-0.0.1-SNAPSHOT.jar
-
 EXPOSE 8081
+
+CMD ["java", "-jar", "llm_wx-0.0.1-SNAPSHOT.jar"]
