@@ -5,10 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import playtime.llm_wx.dto.response.YiResponse;
 import playtime.llm_wx.service.RedisService;
@@ -19,6 +16,7 @@ import java.io.UnsupportedEncodingException;
 
 @Slf4j
 @RestController
+@RequestMapping("/wechat")
 public class WxController {
 
     @Autowired

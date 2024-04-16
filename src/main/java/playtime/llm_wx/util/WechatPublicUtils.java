@@ -1,9 +1,12 @@
 package playtime.llm_wx.util;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
+@Slf4j
 public class WechatPublicUtils {
 
     /**
@@ -21,22 +24,21 @@ public class WechatPublicUtils {
         Arrays.sort(arr);
         // 字符串拼接
         StringBuilder content = new StringBuilder();
-        for (int i = 0; i < arr.length; i++) {
-            content.append(arr[i]);
+        for (String s : arr) {
+            content.append(s);
         }
-        MessageDigest md = null;
         String tmpStr = null;
         try {
-            md = MessageDigest.getInstance("SHA-1");
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
             // sha1加密
             byte[] digest = md.digest(content.toString().getBytes());
             tmpStr = byteToStr(digest);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            log.error("failed to encrypt content", e);
         }
         content = null;
         // sha1加密后的字符串与signature对比
-        return tmpStr != null ? tmpStr.equals(signature.toUpperCase()) : false;
+        return tmpStr != null && tmpStr.equals(signature.toUpperCase());
     }
 
     private static String byteToStr(byte[] byteArray) {
