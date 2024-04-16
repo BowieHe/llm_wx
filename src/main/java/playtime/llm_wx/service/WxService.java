@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import playtime.llm_wx.dto.MsgType;
 import playtime.llm_wx.dto.TextMessage;
 import playtime.llm_wx.dto.WxRequest;
 import playtime.llm_wx.dto.response.YiResponse;
@@ -31,14 +32,10 @@ public class WxService {
     YiService yiService;
 
 
-    public String handleMessage(HttpServletRequest request, HttpServletResponse response) {
-        String requestBody = RestUtil.getBody(request);
-        log.info("get request body {}", requestBody);
+    public String handleMessage(WxRequest request) {
 
-        WxRequest wxRequest = XmlUtil.parseXml(requestBody, WxRequest.class);
-
-        if (wxRequest.getMsgType().equals("text")) {
-            return getReturnQueryAns(wxRequest);
+        if (request.getMsgType() == MsgType.text) {
+            return getReturnQueryAns(request);
         }
         return "";
 
@@ -127,7 +124,7 @@ public class WxService {
         textMessage.setToUserName(decryptMap.get("FromUserName").toString());
         textMessage.setFromUserName(decryptMap.get("ToUserName").toString());
         textMessage.setCreateTime(System.currentTimeMillis());
-        textMessage.setMsgType("text");
+        textMessage.setMsgType(MsgType.text);
         textMessage.setContent("你好，欢迎关注XXX！\n" +
                 "\n" +
                 "关注XXX。立即登录PC端网址 \n" + //domainname +
@@ -162,7 +159,7 @@ public class WxService {
             xml += textMessage.getCreateTime();
             xml += "</CreateTime>";
             xml += "<MsgType><![CDATA[";
-            xml += textMessage.getMsgType();
+            xml += textMessage.getMsgType().getName();
             xml += "]]></MsgType>";
             xml += "<Content><![CDATA[";
             xml += textMessage.getContent();

@@ -22,7 +22,7 @@ public class WxRequest {
     private long createTime;
 
     @JsonProperty("MsgType")
-    private String msgType;
+    private MsgType msgType;
 
     @JsonProperty("Content")
     private String content;

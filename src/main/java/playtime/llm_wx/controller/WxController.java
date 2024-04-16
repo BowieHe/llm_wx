@@ -8,11 +8,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import playtime.llm_wx.dto.MsgType;
+import playtime.llm_wx.dto.WxRequest;
 import playtime.llm_wx.dto.response.YiResponse;
 import playtime.llm_wx.service.RedisService;
 import playtime.llm_wx.service.WxService;
 import playtime.llm_wx.service.YiService;
+import playtime.llm_wx.util.RestUtil;
 import playtime.llm_wx.util.WechatPublicUtils;
+import playtime.llm_wx.util.XmlUtil;
 
 import java.io.UnsupportedEncodingException;
 
@@ -75,15 +79,13 @@ public class WxController {
 
     @PostMapping(value = "/message", produces = {"application/xml; charset=UTF-8"})
     @ResponseBody
-    public String wechatMessage(HttpServletRequest request, HttpServletResponse response) {
-        try {
-            request.setCharacterEncoding("UTF-8");
-            response.setCharacterEncoding("UTF-8");
-            return wxService.handleMessage(request, response);
-        } catch (UnsupportedEncodingException e) {
-            log.error(e.getMessage());
-            return "";
-        }
+    public String wechatMessage(HttpServletRequest request) {
+        String requestBody = RestUtil.getBody(request);
+        log.info("get request body {}", requestBody);
+
+        WxRequest wxRequest = XmlUtil.parseXml(requestBody, WxRequest.class);
+
+        return wxService.handleMessage(wxRequest);
 
     }
 

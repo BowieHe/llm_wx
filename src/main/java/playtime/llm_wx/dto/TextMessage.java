@@ -16,7 +16,7 @@ public class TextMessage {
     String toUserName;
     String fromUserName;
     Long createTime;
-    String msgType = "text";
+    MsgType msgType = MsgType.text;
     String content;
 
     public TextMessage(Map<String, Object> decryptMap, String content) {
@@ -24,7 +24,7 @@ public class TextMessage {
         this.fromUserName = decryptMap.get("FromUserName").toString();
         this.createTime = System.currentTimeMillis();
         if (decryptMap.containsKey("msgType")) {
-            this.msgType = (String) decryptMap.get("msgType");
+            this.msgType = MsgType.getMsgType((String) decryptMap.get("msgType"));
         }
         this.content = content;
     }
