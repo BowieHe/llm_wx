@@ -2,6 +2,8 @@ package playtime.llm_wx.util;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -39,6 +41,42 @@ public class WechatPublicUtils {
         content = null;
         // sha1加密后的字符串与signature对比
         return tmpStr != null && tmpStr.equals(signature.toUpperCase());
+    }
+
+    public static String sort(String token, String timestamp, String nonce) {
+        String[] strArray = {token, timestamp, nonce};
+        Arrays.sort(strArray);
+        StringBuilder sb = new StringBuilder();
+        for (String str : strArray) {
+            sb.append(str);
+        }
+        return sb.toString();
+    }
+
+    //sha1加密
+    public static String getSha1(String str) {
+        if (null == str || str.isEmpty()) {
+            return null;
+        }
+        char[] hexDigits = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                'a', 'b', 'c', 'd', 'e', 'f'};
+        try {
+            MessageDigest mdTemp = MessageDigest.getInstance("SHA1");
+            mdTemp.update(str.getBytes(StandardCharsets.UTF_8));
+
+            byte[] md = mdTemp.digest();
+            int j = md.length;
+            char[] buf = new char[j * 2];
+            int k = 0;
+            for (byte byte0 : md) {
+                buf[k++] = hexDigits[byte0 >>> 4 & 0xf];
+                buf[k++] = hexDigits[byte0 & 0xf];
+            }
+            return new String(buf);
+        } catch (Exception e) {
+            log.error("exception occurred while get sha1", e);
+        }
+        return "";
     }
 
     private static String byteToStr(byte[] byteArray) {

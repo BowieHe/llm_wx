@@ -32,8 +32,10 @@ public class WxService {
 
 
     public String handleMessage(HttpServletRequest request, HttpServletResponse response) {
+        String requestBody = RestUtil.getBody(request);
+        log.info("get request body {}", requestBody);
 
-        WxRequest wxRequest = XmlUtil.parseXml(RestUtil.getBody(request), WxRequest.class);
+        WxRequest wxRequest = XmlUtil.parseXml(requestBody, WxRequest.class);
 
         if (wxRequest.getMsgType().equals("text")) {
             return getReturnQueryAns(wxRequest);
@@ -138,7 +140,7 @@ public class WxService {
     }
 
     public String getReturnQueryAns(WxRequest request) {
-        log.info("Start query from Yi");
+        log.info("Start query from Yi, question: {}", request.getContent());
         YiResponse response = yiService.query(request.getContent());
         TextMessage textMessage = new TextMessage(request, response.getMessages().get(0));
 

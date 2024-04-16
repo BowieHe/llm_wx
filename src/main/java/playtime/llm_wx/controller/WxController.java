@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -11,6 +12,7 @@ import playtime.llm_wx.dto.response.YiResponse;
 import playtime.llm_wx.service.RedisService;
 import playtime.llm_wx.service.WxService;
 import playtime.llm_wx.service.YiService;
+import playtime.llm_wx.util.WechatPublicUtils;
 
 import java.io.UnsupportedEncodingException;
 
@@ -28,10 +30,13 @@ public class WxController {
     @Autowired
     RedisService redisService;
 
-    @PostMapping(value = "/check/signature", produces = {"application/xml; charset=UTF-8"})
+    @Value("${wx.official.token}")
+    private String wxToken;
+
+    @PostMapping(value = "/event", produces = {"application/xml; charset=UTF-8"})
     @ResponseBody
     public void wechatEvent(HttpServletRequest request, HttpServletResponse response) {
-        try{
+        try {
             request.setCharacterEncoding("UTF-8");
             response.setCharacterEncoding("UTF-8");
             wxService.handleEvent(request, response);
@@ -41,10 +46,37 @@ public class WxController {
 
     }
 
+    @GetMapping(value = "/message")
+    @ResponseBody
+    public String checkSignature(
+            @RequestParam("signature") String signature,
+            @RequestParam("timestamp") String timestamp,
+            @RequestParam("nonce") String nonce,
+            @RequestParam("echostr") String echostr) {
+
+        log.info("------------开始校验----------");
+        log.info("signature:{}", signature);
+        log.info("timestamp:{}", timestamp);
+        log.info("nonce:{}", nonce);
+        log.info("echostr:{}", echostr);
+        // 将token、timestamp、nonce三个参数进行字典序排序 并拼接为一个字符串
+        String sortStr = WechatPublicUtils.sort(wxToken, timestamp, nonce);
+        String mySignature = WechatPublicUtils.getSha1(sortStr);
+        // 字符串加密
+        log.info("密文:{}", mySignature);
+        if (signature.equals(mySignature)) {
+            log.info("----nonce---verifyPass--------------------------------：{}", nonce);
+        } else {
+            log.info("---------------verifyDown--------------------------------");
+        }
+        log.info("加密的echostr:{}", echostr);
+        return echostr;
+    }
+
     @PostMapping(value = "/message", produces = {"application/xml; charset=UTF-8"})
     @ResponseBody
     public String wechatMessage(HttpServletRequest request, HttpServletResponse response) {
-        try{
+        try {
             request.setCharacterEncoding("UTF-8");
             response.setCharacterEncoding("UTF-8");
             return wxService.handleMessage(request, response);
@@ -81,16 +113,16 @@ public class WxController {
         // 设置请求体
         String requestBody = "{\"model\": \"yi-34b-chat-0205\",\"messages\": [{\"role\": \"user\", \"content\": \"Hi, who are you?\"}],\"temperature\": 0.7}";
 
-    // 发送请求
-    ResponseEntity<String> responseEntity = restTemplate.exchange(
-            "https://api.lingyiwanwu.com/v1/chat/completions",
-            HttpMethod.POST,
-            new HttpEntity<>(requestBody, headers),
-            String.class
-    );
+        // 发送请求
+        ResponseEntity<String> responseEntity = restTemplate.exchange(
+                "https://api.lingyiwanwu.com/v1/chat/completions",
+                HttpMethod.POST,
+                new HttpEntity<>(requestBody, headers),
+                String.class
+        );
 
-    // 处理响应
-    return responseEntity.getBody();
+        // 处理响应
+        return responseEntity.getBody();
 
     }
 }
