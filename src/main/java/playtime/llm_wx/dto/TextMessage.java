@@ -30,8 +30,8 @@ public class TextMessage {
     }
 
     public TextMessage(WxRequest request, String content) {
-        this.toUserName = request.getToUserName();
-        this.fromUserName = request.getFromUserName();
+        this.toUserName = request.getFromUserName();
+        this.fromUserName = request.getToUserName();
         this.createTime = System.currentTimeMillis();
         this.msgType = request.getMsgType();
         this.content = content;
