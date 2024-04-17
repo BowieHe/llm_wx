@@ -34,10 +34,12 @@ public class WxService {
 
     public String handleMessage(WxRequest request) {
 
+        String res = "";
         if (request.getMsgType() == MsgType.text) {
-            return getReturnQueryAns(request);
+            res = getReturnQueryAns(request);
         }
-        return "";
+        log.info("get response xml: {}", res);
+        return res;
 
     }
 
