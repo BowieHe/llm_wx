@@ -8,9 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-import playtime.llm_wx.dto.MsgType;
 import playtime.llm_wx.dto.WxRequest;
-import playtime.llm_wx.dto.response.YiResponse;
 import playtime.llm_wx.service.RedisService;
 import playtime.llm_wx.service.WxService;
 import playtime.llm_wx.service.YiService;
@@ -87,14 +85,6 @@ public class WxController {
 
         return wxService.handleMessage(wxRequest);
 
-    }
-
-    @GetMapping(value = "/query")
-    @ResponseBody
-    public String query() {
-        YiResponse response = yiService.query("Hi");
-        // currently only return the first answer
-        return response.getMessages().get(0);
     }
 
     @GetMapping(value = "/token")

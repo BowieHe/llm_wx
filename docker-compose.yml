@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  llm_wx:
+    build:
+      context: .
+    image: llm_wx:latest
+    ports:
+      - "8081:8081" # 根据你的 Java 应用的实际端口进行调整
+    depends_on:
+      - kafka
+      - redis
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - REDIS_HOST=redis
+
+  kafka:
+    image: wurstmeister/kafka:latest # 你可以根据需要选择 Kafka 的版本
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      DOCKER_API_VERSION: 1.22
+      KAFKA_ADVERTISED_HOST_NAME: 192.168.99.100
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      restart: unless-stopped
+
+  redis:
+    image: redis:alpine # 使用最新的 Redis 镜像
+    container_name: redis
+    ports:
+      - "6379:6379"
