@@ -92,29 +92,4 @@ public class WxController {
         return wxService.getAccessToken();
     }
 
-    @GetMapping(value = "/test")
-    public String test() {
-        RestTemplate restTemplate = new RestTemplate();
-
-        // 设置请求头
-        org.springframework.http.HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Authorization", "Bearer ee1e6a8612b44e9781d83b2597deea83");
-        headers.set("Cookie", "acw_tc=7b39758217128029716532302eca0b0246440b5eee5fc4ca2d2bf60018f7af");
-
-        // 设置请求体
-        String requestBody = "{\"model\": \"yi-34b-chat-0205\",\"messages\": [{\"role\": \"user\", \"content\": \"Hi, who are you?\"}],\"temperature\": 0.7}";
-
-        // 发送请求
-        ResponseEntity<String> responseEntity = restTemplate.exchange(
-                "https://api.lingyiwanwu.com/v1/chat/completions",
-                HttpMethod.POST,
-                new HttpEntity<>(requestBody, headers),
-                String.class
-        );
-
-        // 处理响应
-        return responseEntity.getBody();
-
-    }
 }
