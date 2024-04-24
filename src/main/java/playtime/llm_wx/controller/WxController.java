@@ -5,9 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import playtime.llm_wx.dto.WxRequest;
 import playtime.llm_wx.service.RedisService;
 import playtime.llm_wx.service.WxService;
@@ -79,12 +77,10 @@ public class WxController {
     @ResponseBody
     public String wechatMessage(HttpServletRequest request) {
         String requestBody = RestUtil.getBody(request);
-        log.info("get request body {}", requestBody);
 
         WxRequest wxRequest = XmlUtil.parseXml(requestBody, WxRequest.class);
 
         return wxService.handleMessage(wxRequest);
-
     }
 
     @GetMapping(value = "/token")

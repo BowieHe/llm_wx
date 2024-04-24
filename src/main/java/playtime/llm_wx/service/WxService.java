@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import playtime.llm_wx.dto.MsgType;
 import playtime.llm_wx.dto.TextMessage;
@@ -15,11 +17,11 @@ import playtime.llm_wx.dto.WxRequest;
 import playtime.llm_wx.dto.response.YiResponse;
 import playtime.llm_wx.util.Constant;
 import playtime.llm_wx.util.RestUtil;
-import playtime.llm_wx.util.XmlUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -31,16 +33,36 @@ public class WxService {
     @Autowired
     YiService yiService;
 
+    @Autowired
+    private KafkaTemplate<String, Object> kafkaTemplate;
+    @Autowired
+    private ObjectMapper jacksonObjectMapper;
 
+
+    @SneakyThrows
     public String handleMessage(WxRequest request) {
 
         String res = "";
-        if (request.getMsgType() == MsgType.text) {
-            res = getReturnQueryAns(request);
-        }
-        log.info("get response xml: {}", res);
-        return res;
+        String response = redisService.getValue(request.getMsgId());
 
+        if(response == null) {
+            // first time query
+            redisService.setValue(request.getMsgId(), "", 180);
+            log.info(jacksonObjectMapper.writeValueAsString(request));
+            kafkaTemplate.send(Constant.KAFKA_TOPIC_LLM_WX_QUERY, jacksonObjectMapper.writeValueAsString(request));
+        } else if (response.isEmpty()) {
+            log.info("query is in processing for MsgId: {}", request.getMsgId());
+        } else {
+            res = response;
+        }
+
+        if(res.isEmpty()) {
+            TimeUnit.SECONDS.sleep(4); //wait for 4s, in case it returned immediately, since there is no query result so far
+            res = "success"; // wx rule, return success if task haven't finish
+        }
+
+        TextMessage textMessage = new TextMessage(request, res);
+        return textMessage.toXmlString();
     }
 
     public void handleEvent(HttpServletRequest request, HttpServletResponse response) {
@@ -134,7 +156,7 @@ public class WxService {
                 "\n" +
                 "或，" +
                 "<a href='" + "'>点击这里立即完成注册</a>");
-        return getXmlString(textMessage);
+        return textMessage.toXmlString();
 
     }
 
@@ -143,32 +165,7 @@ public class WxService {
         YiResponse response = yiService.query(request.getContent());
         TextMessage textMessage = new TextMessage(request, response.getMessages().get(0));
 
-        return getXmlString(textMessage);
-    }
-
-
-    public String getXmlString(TextMessage textMessage) {
-        String xml = "";
-        if (textMessage != null) {
-            xml = "<xml>";
-            xml += "<ToUserName><![CDATA[";
-            xml += textMessage.getToUserName();
-            xml += "]]></ToUserName>";
-            xml += "<FromUserName><![CDATA[";
-            xml += textMessage.getFromUserName();
-            xml += "]]></FromUserName>";
-            xml += "<CreateTime>";
-            xml += textMessage.getCreateTime();
-            xml += "</CreateTime>";
-            xml += "<MsgType><![CDATA[";
-            xml += textMessage.getMsgType().getName();
-            xml += "]]></MsgType>";
-            xml += "<Content><![CDATA[";
-            xml += textMessage.getContent();
-            xml += "]]></Content>";
-            xml += "</xml>";
-        }
-        return xml;
+        return textMessage.toXmlString();
     }
 
 

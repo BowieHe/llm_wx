@@ -22,7 +22,8 @@ public class XmlUtil {
 
                 String elementName = element.getName();
 
-                String elementText = element.getText();
+                // element text might contains \n
+                String elementText = element.getText().trim();
 
                 map.put(elementName, elementText);
 

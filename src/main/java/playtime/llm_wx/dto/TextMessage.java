@@ -36,4 +36,25 @@ public class TextMessage {
         this.msgType = request.getMsgType();
         this.content = content;
     }
+
+    public String toXmlString() {
+        String xml = "<xml>";
+        xml += "<ToUserName><![CDATA[";
+        xml += this.getToUserName();
+        xml += "]]></ToUserName>";
+        xml += "<FromUserName><![CDATA[";
+        xml += this.getFromUserName();
+        xml += "]]></FromUserName>";
+        xml += "<CreateTime>";
+        xml += this.getCreateTime();
+        xml += "</CreateTime>";
+        xml += "<MsgType><![CDATA[";
+        xml += this.getMsgType().getName();
+        xml += "]]></MsgType>";
+        xml += "<Content><![CDATA[";
+        xml += this.getContent();
+        xml += "]]></Content>";
+        xml += "</xml>";
+        return xml;
+    }
 }
