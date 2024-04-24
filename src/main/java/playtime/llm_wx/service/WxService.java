@@ -58,7 +58,7 @@ public class WxService {
 
         if(res.isEmpty()) {
             TimeUnit.SECONDS.sleep(4); //wait for 4s, in case it returned immediately, since there is no query result so far
-            res = "success"; // wx rule, return success if task haven't finish
+            return "";
         }
 
         TextMessage textMessage = new TextMessage(request, res);
