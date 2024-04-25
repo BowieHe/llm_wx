@@ -41,7 +41,7 @@ public class LlmWxQueryConsumer {
 
             // query from Yi
             YiResponse yiResponse = yiService.query(request.getContent());
-            redisService.setValue(request.getMsgId(), yiResponse.getMessages().get(0), 180);
+            redisService.setValue(request.getMsgId(), yiResponse.getMessages().get(0), 300);
         } catch (JsonProcessingException e) {
             log.error("error occurred while parse message: {}", message, e);
             throw new RuntimeException(e);

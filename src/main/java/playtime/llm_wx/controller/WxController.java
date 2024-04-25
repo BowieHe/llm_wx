@@ -7,9 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import playtime.llm_wx.dto.WxRequest;
-import playtime.llm_wx.service.RedisService;
 import playtime.llm_wx.service.WxService;
-import playtime.llm_wx.service.YiService;
 import playtime.llm_wx.util.RestUtil;
 import playtime.llm_wx.util.WechatPublicUtils;
 import playtime.llm_wx.util.XmlUtil;
@@ -23,12 +21,6 @@ public class WxController {
 
     @Autowired
     WxService wxService;
-
-    @Autowired
-    YiService yiService;
-
-    @Autowired
-    RedisService redisService;
 
     @Value("${wx.official.token}")
     private String wxToken;

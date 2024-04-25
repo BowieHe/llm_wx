@@ -41,26 +41,27 @@ public class WxService {
 
     @SneakyThrows
     public String handleMessage(WxRequest request) {
-
         String res = "";
-        String response = redisService.getValue(request.getMsgId());
+        for (int i = 0; i < 30; i++) {
+            String response = redisService.getValue(request.getMsgId());
 
-        if(response == null) {
-            // first time query
-            redisService.setValue(request.getMsgId(), "", 180);
-            log.info(jacksonObjectMapper.writeValueAsString(request));
-            kafkaTemplate.send(Constant.KAFKA_TOPIC_LLM_WX_QUERY, jacksonObjectMapper.writeValueAsString(request));
-        } else if (response.isEmpty()) {
-            log.info("query is in processing for MsgId: {}", request.getMsgId());
-        } else {
-            res = response;
+            if (response == null) {
+                // first time query
+                redisService.setValue(request.getMsgId(), "", 300);
+                log.info(jacksonObjectMapper.writeValueAsString(request));
+                kafkaTemplate.send(Constant.KAFKA_TOPIC_LLM_WX_QUERY, jacksonObjectMapper.writeValueAsString(request));
+            } else if (!response.isEmpty()) {
+                res = response;
+                break;
+            }
+
+            TimeUnit.MILLISECONDS.sleep(200); //wait for 200ms
         }
 
-        if(res.isEmpty()) {
-            TimeUnit.SECONDS.sleep(4); //wait for 4s, in case it returned immediately, since there is no query result so far
+        if (res.isEmpty()) {
+            log.info("query for MsgId: {} didn't finish in time, wait for next call", request.getMsgId());
             return "";
         }
-
         TextMessage textMessage = new TextMessage(request, res);
         return textMessage.toXmlString();
     }
