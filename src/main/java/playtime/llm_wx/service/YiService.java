@@ -32,11 +32,11 @@ public class YiService {
 
         try {
             YiResponse response = mapper.readValue(responseEntity.getBody(), YiResponse.class);
-            log.info("response: {}", mapper.writeValueAsString(response));
+            log.info("get response from YiService: {}", mapper.writeValueAsString(response));
 
             return response;
         } catch (JsonProcessingException e) {
-            log.error(e.getMessage());
+            log.error(e.getMessage(), e);
         }
         return null;
 

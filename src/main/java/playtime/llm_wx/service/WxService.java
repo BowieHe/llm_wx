@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import playtime.llm_wx.dto.MsgType;
 import playtime.llm_wx.dto.TextMessage;
 import playtime.llm_wx.dto.WxRequest;
-import playtime.llm_wx.dto.response.YiResponse;
 import playtime.llm_wx.util.Constant;
 import playtime.llm_wx.util.RestUtil;
 
@@ -160,15 +159,6 @@ public class WxService {
         return textMessage.toXmlString();
 
     }
-
-    public String getReturnQueryAns(WxRequest request) {
-        log.info("Start query from Yi, question: {}", request.getContent());
-        YiResponse response = yiService.query(request.getContent());
-        TextMessage textMessage = new TextMessage(request, response.getMessages().get(0));
-
-        return textMessage.toXmlString();
-    }
-
 
     @Value("${wx.official.appid}")
     private String appid;
