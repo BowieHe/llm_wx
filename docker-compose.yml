@@ -11,9 +11,11 @@ services:
     depends_on:
       - kafka
       - redis
+      - mysql
     environment:
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/llm_wx
 
   kafka:
     image: confluentinc/cp-kafka:7.4.4
@@ -47,11 +49,13 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root # 设置root用户的密码
+      TZ: Asia/Shanghai
       MYSQL_DATABASE: llm_wx # 创建一个初始数据库
     ports:
       - "3306:3306" # 将容器的3306端口映射到宿主机的3306端口
     volumes:
       - mysql-volume:/var/lib/mysql # 持久化MySQL数据
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
 
   redis:

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.volvo.dao.CarMetaMapper">
+
+    <resultMap id="CarMetaEntity" type="org.volvo.pojo.CarMeta">
+        <result property="*" column="*"/>
+        <result property="additionInfo" column="addition_info" typeHandler="org.volvo.util.JsonStringToMapTypeHandler"/>
+    </resultMap>
+
+    <select id="getMetaByCarId" resultMap="CarMetaEntity">
+        SELECT car_id, id, addition_info
+        FROM car_meta
+        WHERE car_id = #{carId}
+    </select>
+
+    <select id="getAllCarMeta" resultMap="CarMetaEntity">
+        SELECT car_id, id, addition_info
+        FROM car_meta
+    </select>
+
+
+    <update id="updateMeta">
+        UPDATE car_meta
+        SET model_year          = #{modelYear},
+            structure_week      = #{structureWeek},
+            engine_description  = #{engineDescription},
+            fuel_type           = #{fuelType},
+            model               = #{model},
+            gearbox_description = #{gearboxDescription},
+            gearbox_code        = #{gearboxCode},
+            platform            = #{platform},
+            equipment_type      = #{equipmentType},
+            delivery_country    = #{deliveryCountry},
+            vehicle_status      = #{vehicleStatus},
+            car_usage           = #{carUsage},
+            order_description   = #{orderDescription},
+            factory_complete    = #{factoryComplete},
+            scheduled_delivery  = #{scheduledDelivery},
+            scheduled_return    = #{scheduledReturn},
+            vehicle_delivered   = #{vehicleDelivered},
+            vehicle_returned    = #{vehicleReturned},
+            vehicle_tests       = #{vehicleTests},
+            assembly_plant      = #{assemblyPlant},
+            ota_version         = #{otaVersion},
+            market_code         = #{marketCode},
+            addition_info       = #{additionInfo, typeHandler=org.volvo.util.JsonStringToMapTypeHandler}
+        WHERE car_id = #{carId}
+    </update>
+
+
+    <insert id="insertInto" parameterType="org.volvo.pojo.CarMeta">
+        REPLACE
+        INTO car_meta (
+        id,
+    model_year,
+    structure_week,
+    engine_description,
+    fuel_type,
+    model,
+    gearbox_description,
+    gearbox_code,
+    platform,
+    equipment_type,
+    delivery_country,
+    vehicle_status,
+    car_usage,
+    order_description,
+    factory_complete,
+    scheduled_delivery,
+    scheduled_return,
+    vehicle_delivered,
+    vehicle_returned,
+    vehicle_tests,
+    assembly_plant,
+    ota_version,
+    market_code,
+    addition_info,
+    car_id
+)
+VALUES
+    (
+        #{id},
+        #{modelYear},
+        #{structureWeek},
+        #{engineDescription},
+        #{fuelType},
+        #{model},
+        #{gearboxDescription},
+        #{gearboxCode},
+        #{platform},
+        #{equipmentType},
+        #{deliveryCountry},
+        #{vehicleStatus},
+        #{carUsage},
+        #{orderDescription},
+        #{factoryComplete},
+        #{scheduledDelivery},
+        #{scheduledReturn},
+        #{vehicleDelivered},
+        #{vehicleReturned},
+        #{vehicleTests} ,
+        #{assemblyPlant},
+        #{otaVersion},
+        #{marketCode},
+        #{additionInfo, typeHandler=org.volvo.util.JsonStringToMapTypeHandler},
+        #{carId}
+        )
+    </insert>
+</mapper>
