@@ -9,8 +9,12 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class RedisService {
 
+    private final StringRedisTemplate redisTemplate;
+
     @Autowired
-    private StringRedisTemplate redisTemplate;
+    public RedisService(StringRedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
 
     public void setValue(String key, String value) {
         redisTemplate.opsForValue().set(key, value);

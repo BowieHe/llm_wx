@@ -19,11 +19,12 @@ import java.io.UnsupportedEncodingException;
 @RequestMapping("/wechat")
 public class WxController {
 
-    @Autowired
-    WxService wxService;
+    final WxService wxService;
 
-    @Value("${wx.official.token}")
-    private String wxToken;
+    @Autowired
+    public WxController(WxService wxService) {
+        this.wxService = wxService;
+    }
 
     @PostMapping(value = "/event", produces = {"application/xml; charset=UTF-8"})
     @ResponseBody
@@ -45,24 +46,7 @@ public class WxController {
             @RequestParam("timestamp") String timestamp,
             @RequestParam("nonce") String nonce,
             @RequestParam("echostr") String echostr) {
-
-        log.info("------------开始校验----------");
-        log.info("signature:{}", signature);
-        log.info("timestamp:{}", timestamp);
-        log.info("nonce:{}", nonce);
-        log.info("echostr:{}", echostr);
-        // 将token、timestamp、nonce三个参数进行字典序排序 并拼接为一个字符串
-        String sortStr = WechatPublicUtils.sort(wxToken, timestamp, nonce);
-        String mySignature = WechatPublicUtils.getSha1(sortStr);
-        // 字符串加密
-        log.info("密文:{}", mySignature);
-        if (signature.equals(mySignature)) {
-            log.info("----nonce---verifyPass--------------------------------：{}", nonce);
-        } else {
-            log.info("---------------verifyDown--------------------------------");
-        }
-        log.info("加密的echostr:{}", echostr);
-        return echostr;
+        return wxService.checkSignature(signature, timestamp, nonce, echostr);
     }
 
     @PostMapping(value = "/message", produces = {"application/xml; charset=UTF-8"})

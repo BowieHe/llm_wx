@@ -16,6 +16,7 @@ import playtime.llm_wx.dto.TextMessage;
 import playtime.llm_wx.dto.WxRequest;
 import playtime.llm_wx.util.Constant;
 import playtime.llm_wx.util.RestUtil;
+import playtime.llm_wx.util.WechatPublicUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,7 +48,6 @@ public class WxService {
             if (response == null) {
                 // first time query
                 redisService.setValue(request.getMsgId(), "", 300);
-                log.info(jacksonObjectMapper.writeValueAsString(request));
                 kafkaTemplate.send(Constant.KAFKA_TOPIC_LLM_WX_QUERY, jacksonObjectMapper.writeValueAsString(request));
             } else if (!response.isEmpty()) {
                 res = response;
@@ -186,5 +186,28 @@ public class WxService {
 
         }
         return accessToken;
+    }
+
+    @Value("${wx.official.token}")
+    private String wxToken;
+
+    public String checkSignature(String signature, String timestamp, String nonce, String echostr) {
+        log.info("------------开始校验----------");
+        log.info("signature:{}", signature);
+        log.info("timestamp:{}", timestamp);
+        log.info("nonce:{}", nonce);
+        log.info("echostr:{}", echostr);
+        // 将token、timestamp、nonce三个参数进行字典序排序 并拼接为一个字符串
+        String sortStr = WechatPublicUtils.sort(wxToken, timestamp, nonce);
+        String mySignature = WechatPublicUtils.getSha1(sortStr);
+        // 字符串加密
+        log.info("密文:{}", mySignature);
+        if (signature.equals(mySignature)) {
+            log.info("----nonce---verifyPass--------------------------------：{}", nonce);
+        } else {
+            log.info("---------------verifyDown--------------------------------");
+        }
+        log.info("加密的echostr:{}", echostr);
+        return echostr;
     }
 }

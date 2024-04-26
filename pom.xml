@@ -126,6 +126,13 @@
             <scope>compile</scope>
         </dependency>
 
+        <!--llm-->
+        <dependency>
+            <groupId>io.github.hamawhitegg</groupId>
+            <artifactId>langchain-core</artifactId>
+            <version>0.2.2</version>
+        </dependency>
+
     </dependencies>
 
     <build>
